@@ -1,0 +1,989 @@
+---
+format:
+  revealjs:
+    theme: [default, custom.scss]
+    slide-number: false
+    chalkboard: false
+    preview-links: auto
+    footer: "Phnom Penh International University"
+    transition: fade
+    background-transition: fade
+execute:
+  echo: true
+  warning: false
+jupyter: python3
+---
+
+## Introduction to Pandas {.center}
+
+**By: MIN Sothearith**
+
+Phnom Penh International University
+
+---
+
+## Meet the Panda 🐼 {.center}
+
+*…the cute animal that gives our library its mascot.*
+
+---
+
+## But Wait — What Does "Pandas" Really Mean? {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+**PAN** — *Panel*
+
+**DA** — *Data*
+
+**S** — *Set*
+:::
+::: {.column width="50%"}
+**Panel Data**
+
+A term from **econometrics** for multi-dimensional datasets that track many subjects over time.
+:::
+:::
+
+::: {.callout-important}
+## The Real Story
+"Pandas" stands for **Pan**el **Da**ta. Wes McKinney built it in 2008 at AQR Capital to analyze financial panel data. The panda animal? Just a happy coincidence.
+:::
+
+---
+
+## Course Roadmap {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+**Part 1 — Foundations**
+
+- What is Pandas?
+- Series
+- DataFrame
+- Loading CSV data
+:::
+::: {.column width="50%"}
+**Part 2 — Working with Data**
+
+- Selecting & Filtering
+- Modifying
+- Missing Data
+- Sorting & Grouping
+:::
+:::
+
+---
+
+# Part 1 {.center}
+
+## Foundations of Pandas
+
+*Series · DataFrame · Loading Data*
+
+---
+
+## What is Pandas?
+
+**Pandas** is the most popular Python library for working with **tabular data** — like Excel, but programmable.
+
+- Created in 2008 by Wes McKinney
+- Built on top of **NumPy**
+- Powers most data analysis in Python today
+
+---
+
+## Why Pandas?
+
+::: {.columns}
+::: {.column width="50%"}
+**Without Pandas**
+
+```python
+rows = []
+with open("data.csv") as f:
+    for line in f:
+        rows.append(line.split(","))
+
+# manual filtering, totals,
+# grouping, joining...
+```
+:::
+::: {.column width="50%"}
+**With Pandas**
+
+```python
+import pandas as pd
+df = pd.read_csv("data.csv")
+df.groupby("platform").mean()
+```
+:::
+:::
+
+One line replaces dozens. That's the power of Pandas.
+
+---
+
+## Pandas vs NumPy
+
+```{python}
+import numpy as np
+import pandas as pd
+
+# NumPy — numbers only, no labels
+arr = np.array([320, 1850, 4200])
+print(arr)
+
+# Pandas — labeled, mixed types
+s = pd.Series([320, 1850, 4200],
+              index=["Facebook", "Instagram", "TikTok"])
+print(s)
+```
+
+---
+
+## Importing Pandas
+
+The standard convention — always use `pd`:
+
+```{python}
+import pandas as pd
+import numpy as np
+
+print("Pandas version:", pd.__version__)
+```
+
+::: {.callout-tip}
+## Convention
+Every Python data project starts with `import pandas as pd`. Stick to the convention so others can read your code instantly.
+:::
+
+---
+
+## Our Dataset
+
+We will use **`store_social_media.csv`** — a small online store's social media posts.
+
+Each row is **one post**. Columns include:
+
+- `date`, `platform`, `post_type`, `product`
+- `likes`, `comments`, `shares`, `views`
+- `ad_spend`, `revenue`
+
+::: {.callout-important}
+## Why This Dataset?
+Real businesses live on social data — likes, reach, ad spend. Pandas is how analysts turn this into decisions.
+:::
+
+---
+
+# Series {.center}
+
+## The 1-D Building Block
+
+---
+
+## What is a Series?
+
+A **Series** is a one-dimensional labeled array — like a single column of a spreadsheet.
+
+```{python}
+import pandas as pd
+
+likes = pd.Series([320, 1850, 4200, 540])
+print(likes)
+```
+
+::: {.callout-note}
+The left column (`0, 1, 2, 3`) is the **index**. The right column is the **values**.
+:::
+
+---
+
+## Series with Custom Index
+
+You can give the index meaningful labels:
+
+```{python}
+likes = pd.Series(
+    [320, 1850, 4200, 540],
+    index=["Facebook", "Instagram", "TikTok", "YouTube"]
+)
+print(likes)
+```
+
+---
+
+## Series from a Dictionary
+
+A dict turns into a Series automatically — keys become the index:
+
+```{python}
+post_likes = {
+    "Facebook":  320,
+    "Instagram": 1850,
+    "TikTok":    4200,
+    "YouTube":   2300
+}
+s = pd.Series(post_likes)
+print(s)
+```
+
+---
+
+## Accessing Series Values
+
+```{python}
+s = pd.Series(
+    [320, 1850, 4200, 2300],
+    index=["Facebook", "Instagram", "TikTok", "YouTube"]
+)
+
+print(s["TikTok"])      # by label
+print(s[0])             # by position
+print(s[["Facebook", "YouTube"]])  # multiple
+```
+
+---
+
+## Series Operations
+
+A Series behaves like a smart NumPy array:
+
+```{python}
+likes = pd.Series([320, 1850, 4200, 2300],
+    index=["Facebook", "Instagram", "TikTok", "YouTube"])
+
+print("Sum:  ", likes.sum())
+print("Mean: ", likes.mean())
+print("Max:  ", likes.max())
+print("Min:  ", likes.min())
+```
+
+---
+
+## Series Math Operations
+
+Math applies to **every value at once** — just like NumPy:
+
+```{python}
+likes = pd.Series([320, 1850, 4200, 2300],
+    index=["Facebook", "Instagram", "TikTok", "YouTube"])
+
+print(likes * 2)        # double everything
+print(likes > 1000)     # boolean test
+```
+
+---
+
+# DataFrame {.center}
+
+## The 2-D Powerhouse
+
+---
+
+## What is a DataFrame?
+
+A **DataFrame** is a 2-D labeled table — rows and columns — like an Excel sheet or SQL table.
+
+Think of it as **many Series glued together**, sharing the same index.
+
+```{python}
+df = pd.DataFrame({
+    "platform": ["Facebook", "Instagram", "TikTok"],
+    "likes":    [320, 1850, 4200],
+    "shares":   [18, 340, 910]
+})
+print(df)
+```
+
+---
+
+## DataFrame from a Dictionary
+
+The keys are column names, the lists are column values:
+
+```{python}
+data = {
+    "post_id":  [1, 2, 3, 4],
+    "platform": ["Facebook", "Instagram", "TikTok", "YouTube"],
+    "likes":    [320, 1850, 4200, 2300],
+    "revenue":  [210, 650, 820, 540]
+}
+df = pd.DataFrame(data)
+print(df)
+```
+
+---
+
+## Loading a CSV File
+
+The most common way to create a DataFrame — read it from a file:
+
+```{python}
+import pandas as pd
+df = pd.read_csv("store_social_media.csv")
+print(type(df))
+print(df.shape)        # (rows, columns)
+```
+
+::: {.callout-tip}
+`pd.read_csv()` also handles Excel-like options: separators, headers, dates, encoding, missing-value markers.
+:::
+
+---
+
+## Peeking with `head()` and `tail()`
+
+```{python}
+df = pd.read_csv("store_social_media.csv")
+df.head()
+```
+
+---
+
+## `tail()` — Last Rows
+
+```{python}
+df.tail(3)
+```
+
+::: {.callout-note}
+Default is 5 rows. Pass any number, e.g. `df.head(10)`.
+:::
+
+---
+
+## DataFrame Anatomy
+
+```{python}
+print("Shape:    ", df.shape)
+print("Columns:  ", df.columns.tolist())
+print("Index:    ", df.index)
+print("Size:     ", df.size)        # total cells
+```
+
+---
+
+## `info()` — Structure Overview
+
+```{python}
+df.info()
+```
+
+::: {.callout-important}
+`info()` shows **column types** and how many **non-null** values each column has — perfect for spotting missing data.
+:::
+
+---
+
+## `describe()` — Statistical Summary
+
+```{python}
+df.describe()
+```
+
+`describe()` only summarizes the **numeric** columns by default.
+
+---
+
+## `dtypes` — Column Data Types
+
+```{python}
+df.dtypes
+```
+
+- `int64` → whole numbers
+- `float64` → decimal numbers
+- `object` → text (strings)
+
+---
+
+# Part 2 {.center}
+
+## Working with Data
+
+*Selecting · Filtering · Modifying · Missing · Sorting · Grouping*
+
+---
+
+# Selecting Data {.center}
+
+## Pick Columns and Rows
+
+---
+
+## Selecting One Column
+
+Use **square brackets** with the column name:
+
+```{python}
+df = pd.read_csv("store_social_media.csv")
+df["likes"].head()
+```
+
+A single column is a **Series**.
+
+---
+
+## Selecting Multiple Columns
+
+Pass a **list of column names** — get back a smaller DataFrame:
+
+```{python}
+df[["platform", "likes", "revenue"]].head()
+```
+
+::: {.callout-tip}
+Note the **double brackets** `[[ ]]` — outer `[]` is selection, inner `[]` is the list of columns.
+:::
+
+---
+
+## `.iloc` — Select by Position
+
+`iloc` uses **integer positions** — like NumPy indexing:
+
+```{python}
+df.iloc[0]        # first row (as a Series)
+```
+
+---
+
+## `.iloc` — Slicing
+
+```{python}
+df.iloc[0:5]                # first 5 rows
+```
+
+```{python}
+df.iloc[0:3, 1:4]           # rows 0-2, columns 1-3
+```
+
+---
+
+## `.loc` — Select by Label
+
+`loc` uses **labels** (index values and column names):
+
+```{python}
+df.loc[0, "platform"]              # row 0, column "platform"
+```
+
+```{python}
+df.loc[0:3, ["platform", "likes"]]  # rows 0-3, two columns
+```
+
+::: {.callout-note}
+With `.loc`, slicing is **inclusive** on both ends — `0:3` returns rows 0, 1, 2, **and 3**.
+:::
+
+---
+
+## `.iloc` vs `.loc` — Quick Compare
+
+| Tool   | Uses        | Slice end |
+|--------|-------------|-----------|
+| `.iloc` | Position (int) | Exclusive |
+| `.loc`  | Label (name)   | Inclusive |
+
+```{python}
+print(df.iloc[0:2])    # rows 0, 1
+print("---")
+print(df.loc[0:2, "platform"])   # rows 0, 1, 2
+```
+
+---
+
+# Filtering {.center}
+
+## Find Rows That Match a Condition
+
+---
+
+## Boolean Indexing — One Condition
+
+```{python}
+df = pd.read_csv("store_social_media.csv")
+
+# All posts with more than 2000 likes
+viral = df[df["likes"] > 2000]
+viral.head()
+```
+
+::: {.callout-tip}
+`df["likes"] > 2000` returns a boolean Series — Pandas keeps only the rows where it's `True`.
+:::
+
+---
+
+## Filtering with Equality
+
+```{python}
+# Only TikTok posts
+tiktok = df[df["platform"] == "TikTok"]
+tiktok.head()
+```
+
+---
+
+## Multiple Conditions — AND `&`
+
+```{python}
+# TikTok posts that earned more than $500
+big_wins = df[(df["platform"] == "TikTok") & (df["revenue"] > 500)]
+big_wins
+```
+
+::: {.callout-important}
+## Watch the Syntax
+Use `&` (not `and`), `|` (not `or`), and **wrap each condition in parentheses** — Pandas is strict here.
+:::
+
+---
+
+## Multiple Conditions — OR `|`
+
+```{python}
+# Posts on Instagram OR TikTok
+social = df[(df["platform"] == "Instagram") | (df["platform"] == "TikTok")]
+social.head()
+```
+
+---
+
+## `.isin()` — Match Any Value in a List
+
+A cleaner way to write the previous filter:
+
+```{python}
+social = df[df["platform"].isin(["Instagram", "TikTok"])]
+social.head()
+```
+
+---
+
+## `.between()` — Range Filter
+
+```{python}
+# Posts with revenue between $200 and $500
+mid_range = df[df["revenue"].between(200, 500)]
+mid_range.head()
+```
+
+---
+
+# Modifying Data {.center}
+
+## Add, Update, Drop, Rename
+
+---
+
+## Adding a New Column
+
+A new column comes from a calculation on existing columns:
+
+```{python}
+df = pd.read_csv("store_social_media.csv")
+
+df["total_engagement"] = df["likes"] + df["comments"] + df["shares"]
+df[["platform", "likes", "comments", "shares", "total_engagement"]].head()
+```
+
+---
+
+## A Computed Ratio Column
+
+```{python}
+df["roi"] = df["revenue"] / df["ad_spend"]
+df[["platform", "ad_spend", "revenue", "roi"]].head()
+```
+
+ROI = Return on Investment — how much revenue per $1 of ad spend.
+
+---
+
+## Updating Existing Values
+
+```{python}
+df.loc[0, "platform"] = "Facebook Page"
+df.head(2)
+```
+
+---
+
+## Renaming Columns
+
+```{python}
+df = df.rename(columns={
+    "likes":    "num_likes",
+    "comments": "num_comments"
+})
+df.columns.tolist()
+```
+
+::: {.callout-tip}
+By default `rename` returns a **new** DataFrame. Assign it back, or pass `inplace=True`.
+:::
+
+---
+
+## Dropping a Column
+
+```{python}
+df = pd.read_csv("store_social_media.csv")
+df = df.drop(columns=["shares"])
+df.head(2)
+```
+
+---
+
+## Dropping Rows
+
+```{python}
+df = pd.read_csv("store_social_media.csv")
+df = df.drop(index=[0, 1, 2])   # drop first three rows
+df.head(3)
+```
+
+---
+
+# Missing Data {.center}
+
+## The Real World is Messy
+
+---
+
+## What is Missing Data?
+
+In Pandas, missing values are shown as `NaN` (Not a Number).
+
+They appear when:
+
+- A cell was empty in the CSV
+- A calculation was undefined (e.g. `0/0`)
+- Data was lost or never collected
+
+Our store dataset has a few real gaps — let's find them.
+
+---
+
+## `isnull()` — Find Missing Values
+
+```{python}
+df = pd.read_csv("store_social_media.csv")
+df.isnull().head(10)
+```
+
+`True` means missing, `False` means present.
+
+---
+
+## Counting Missing per Column
+
+`isnull()` + `sum()` is the most common health check:
+
+```{python}
+df.isnull().sum()
+```
+
+---
+
+## `notnull()` — The Opposite
+
+```{python}
+# Rows where ad_spend IS recorded
+df[df["ad_spend"].notnull()].shape
+```
+
+---
+
+## `dropna()` — Remove Rows with Missing
+
+```{python}
+clean = df.dropna()
+print("Original:", df.shape)
+print("Cleaned: ", clean.shape)
+```
+
+::: {.callout-warning}
+`dropna()` removes any row with at least one `NaN`. Use carefully — you may lose useful data.
+:::
+
+---
+
+## `fillna()` — Replace Missing Values
+
+```{python}
+df["comments"] = df["comments"].fillna(0)
+df["ad_spend"] = df["ad_spend"].fillna(df["ad_spend"].mean())
+
+df.isnull().sum()
+```
+
+We filled missing `comments` with `0` and missing `ad_spend` with the **column average**.
+
+---
+
+## `fillna()` Strategies
+
+| Strategy        | When to use                          |
+|-----------------|--------------------------------------|
+| `fillna(0)`     | Counts where missing means "none"    |
+| `fillna(mean)`  | Continuous numbers (price, spend)    |
+| `fillna(median)`| When outliers skew the mean          |
+| `fillna("Unknown")` | Text / category columns           |
+
+---
+
+# Sorting {.center}
+
+## Order Your Rows
+
+---
+
+## `sort_values()` — Single Column
+
+```{python}
+df = pd.read_csv("store_social_media.csv")
+
+top_likes = df.sort_values("likes", ascending=False)
+top_likes[["platform", "post_type", "likes"]].head()
+```
+
+The most-liked posts rise to the top.
+
+---
+
+## Sorting Ascending (default)
+
+```{python}
+df.sort_values("revenue").head()
+```
+
+The lowest-earning posts come first.
+
+---
+
+## Sorting by Multiple Columns
+
+```{python}
+df.sort_values(
+    ["platform", "likes"],
+    ascending=[True, False]
+)[["platform", "post_type", "likes"]].head(8)
+```
+
+First sort by `platform` A→Z, then within each platform sort `likes` high→low.
+
+---
+
+## `sort_index()` — Order by the Index
+
+```{python}
+df.sort_index(ascending=False).head()
+```
+
+Useful after filtering or grouping has shuffled the row order.
+
+---
+
+# Aggregation & Grouping {.center}
+
+## The Most Powerful Idea in Pandas
+
+---
+
+## Aggregating a Whole Column
+
+```{python}
+df = pd.read_csv("store_social_media.csv")
+
+print("Total likes:     ", df["likes"].sum())
+print("Average revenue: ", df["revenue"].mean().round(2))
+print("Max views:       ", df["views"].max())
+print("Number of posts: ", df["post_id"].count())
+```
+
+---
+
+## `value_counts()` — Quick Tally
+
+How many posts per platform?
+
+```{python}
+df["platform"].value_counts()
+```
+
+---
+
+## `value_counts()` for Categories
+
+```{python}
+df["post_type"].value_counts()
+```
+
+Great for understanding the **shape** of your categorical data.
+
+---
+
+## What is `groupby()`?
+
+`groupby()` splits the table into chunks based on a column, then runs a calculation on each chunk.
+
+::: {.callout-important}
+## Split → Apply → Combine
+1. **Split** rows by a category
+2. **Apply** a function (sum, mean…) to each group
+3. **Combine** results into a new table
+:::
+
+This is how analysts turn raw data into insight.
+
+---
+
+## Group by Platform — Mean
+
+Which platform produces the highest average revenue per post?
+
+```{python}
+df.groupby("platform")["revenue"].mean().round(2)
+```
+
+---
+
+## Group by Platform — Sum
+
+Total revenue earned per platform:
+
+```{python}
+df.groupby("platform")["revenue"].sum()
+```
+
+---
+
+## Group by Platform — Count
+
+How many posts per platform:
+
+```{python}
+df.groupby("platform")["post_id"].count()
+```
+
+---
+
+## Group by Product
+
+Total revenue per product category:
+
+```{python}
+df.groupby("product")["revenue"].sum().sort_values(ascending=False)
+```
+
+The store's best-selling category jumps out immediately.
+
+---
+
+## Group by Post Type
+
+```{python}
+df.groupby("post_type")[["likes", "shares", "views"]].mean().round(0)
+```
+
+Which post format generates the most engagement on average?
+
+---
+
+## Group by Multiple Columns
+
+Group by **both** platform and product:
+
+```{python}
+df.groupby(["platform", "product"])["revenue"].sum().head(10)
+```
+
+The result has a **multi-level index** — one level per grouping column.
+
+---
+
+## `.agg()` — Multiple Aggregations at Once
+
+```{python}
+df.groupby("platform")["revenue"].agg(["sum", "mean", "max", "count"]).round(2)
+```
+
+One call → four statistics per platform.
+
+---
+
+## `.agg()` — Different Functions per Column
+
+```{python}
+df.groupby("platform").agg({
+    "likes":    "sum",
+    "revenue":  "mean",
+    "ad_spend": "sum",
+    "post_id":  "count"
+}).round(2)
+```
+
+A full marketing dashboard in **one line of code**.
+
+---
+
+## Real Business Question
+
+> Which platform gives the best return on ad spend?
+
+```{python}
+roi = df.groupby("platform").agg(
+    total_revenue  = ("revenue", "sum"),
+    total_spend    = ("ad_spend", "sum")
+)
+roi["roi"] = (roi["total_revenue"] / roi["total_spend"]).round(2)
+roi.sort_values("roi", ascending=False)
+```
+
+---
+
+## Recap {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+**You can now:**
+
+- Build Series & DataFrames
+- Load CSV files
+- Inspect data
+- Select columns & rows
+- Filter with conditions
+:::
+::: {.column width="50%"}
+**…and:**
+
+- Add & rename columns
+- Handle missing values
+- Sort by any column
+- Group, aggregate, summarise
+:::
+:::
+
+---
+
+## What's Next {.center}
+
+::: {.callout-tip}
+## In the coming weeks
+- Merging & joining DataFrames
+- Time series & dates
+- Visualizing with Matplotlib
+- Real data projects
+:::
+
+---
+
+## Thank You {.center}
+
+**Questions?**
+
+*Phnom Penh International University*
